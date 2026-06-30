@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHARGE POINT | Mes Machines</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Poppins', sans-serif; padding-bottom: 120px; }
+        .my-card { background: white; border-radius: 20px; overflow: hidden; margin-bottom: 20px; border: 1px solid #eee; }
+        .my-img { width: 100%; height: 180px; object-fit: cover; }
+        .btn-collect { background: #f97316; color: white; width: 100%; padding: 14px; border-radius: 15px; font-weight: 800; font-size: 13px; text-transform: uppercase; }
+        .btn-disabled { background: #cbd5e1; color: #64748b; width: 100%; padding: 14px; border-radius: 15px; font-weight: 800; font-size: 13px; text-transform: uppercase; cursor: not-allowed; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #eee; z-index: 1000; }
+    </style>
+</head>
+<body class="p-4">
+
+    <div class="mb-6 pt-4 flex items-center gap-3">
+        <button onclick="window.location.href='produit.html'" class="text-gray-900 text-xl"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+            <h1 class="text-2xl font-black tracking-tight">MES INVESTISSEMENTS</h1>
+            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Récolte disponible toutes les 24 heures</p>
+        </div>
+    </div>
+
+    <!-- Zone d'affichage des pompes achetées -->
+    <div id="my-products-container" class="space-y-4">
+        <p id="loading-msg" class="text-center text-gray-400 font-medium py-10">Chargement de vos machines...</p>
+    </div>
+
+    <!-- Barre de navigation inférieure -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="flex flex-col items-center text-gray-400">
+            <i class="fa-solid fa-house text-xl"></i><span class="text-[10px] font-bold mt-1">Accueil</span>
+        </a>
+        <a href="produit.html" class="flex flex-col items-center text-orange-500">
+            <i class="fa-solid fa-gas-pump text-xl"></i><span class="text-[10px] font-bold mt-1">Produit</span>
+        </a>
+        <a href="compte.html" class="flex flex-col items-center text-gray-400">
+            <i class="fa-solid fa-user text-xl"></i><span class="text-[10px] font-bold mt-1">Compte</span>
+        </a>
+    </nav>
+
+    <script>
+        const session = JSON.parse(localStorage.getItem('sonny_session'));
+        const dbURL = "https://sonyy-9b565-default-rtdb.firebaseio.com";
+
+        if(!session) { window.location.href = "index.html"; }
+
+        async function loadMyProducts() {
+            const container = document.getElementById('my-products-container');
+            try {
+                const iRes = await fetch(`${dbURL}/investissements/${session.firebaseId}.json`);
+                const products = await iRes.json();
+
+                if (!products || Object.keys(products).length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-12 bg-white rounded-3xl p-6 border border-dashed border-gray-300">
+                            <i class="fa-solid fa-gas-pump text-4xl text-gray-300 mb-2"></i>
+                            <p class="text-gray-500 text-sm font-semibold">Vous n'avez pas encore acheté de pompe à essence.</p>
+                            <button onclick="window.location.href='produit.html'" class="mt-4 bg-orange-500 text-white font-bold px-6 py-2 rounded-xl text-xs uppercase">Visiter la boutique</button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = "";
+                const now = new Date();
+
+                for (let key in products) {
+                    const prod = products[key];
+                    const lastCollect = new Date(prod.dernierCollecte);
+                    const expiry = new Date(prod.expireLe);
+                    
+                    // Calcul du temps écoulé
+                    const diffHours = (now - lastCollect) / (1000 * 60 * 60);
+                    const isExpired = now >= expiry;
+
+                    let actionButton = "";
+
+                    if (isExpired) {
+                        actionButton = `<button class="btn-disabled" disabled>Pack Expiré (22j)</button>`;
+                    } else if (diffHours >= 24) {
+                        actionButton = `<button onclick="collecterGain('${key}', ${prod.gainJournalier})" class="btn-collect">Récolter ${prod.gainJournalier.toLocaleString()} CDF</button>`;
+                    } else {
+                        // Calcul du temps restant pour la prochaine récolte
+                        const remainingHours = Math.ceil(24 - diffHours);
+                        actionButton = `<button class="btn-disabled" disabled><i class="fa-solid fa-clock mr-1"></i> Prochaine récolte dans ${remainingHours}h</button>`;
+                    }
+
+                    container.innerHTML += `
+                        <div class="my-card bg-white border border-gray-100 shadow-sm overflow-hidden rounded-3xl">
+                            <img src="${prod.img || 'IMG_6521.jpeg'}" class="my-img">
+                            <div class="p-5">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h2 class="font-black text-lg uppercase text-gray-800">${prod.nom}</h2>
+                                    <span class="text-[10px] bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold uppercase">Actif</span>
+                                </div>
+                                <div class="text-xs text-gray-500 space-y-1 mb-4 bg-gray-50 p-3 rounded-xl">
+                                    <div class="flex justify-between"><span>Production 24h :</span> <strong class="text-gray-800">${prod.gainJournalier.toLocaleString()} CDF</strong></div>
+                                    <div class="flex justify-between"><span>Dernière collecte :</span> <strong class="text-gray-800">${lastCollect.toLocaleDateString()}</strong></div>
+                                </div>
+                                ${actionButton}
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                container.innerHTML = `<p class="text-center text-red-500 text-xs">Erreur de chargement. Vérifiez votre connexion.</p>`;
+            }
+        }
+
+        // Système de récolte manuelle et crédit automatique sur Firebase
+        async function collecterGain(prodKey, gain) {
+            try {
+                // 1. Charger le solde actuel
+                const uRes = await fetch(`${dbURL}/utilisateurs/${session.firebaseId}.json`);
+                const user = await uRes.json();
+
+                const nouveauSolde = user.solde + gain;
+                const nouveauRevenu = (user.revenuCumule || 0) + gain;
+
+                // 2. Mettre à jour l'utilisateur
+                await fetch(`${dbURL}/utilisateurs/${session.firebaseId}.json`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ solde: nouveauSolde, revenuCumule: nouveauRevenu })
+                });
+
+                // 3. Mettre à jour la date de dernière récolte pour ce produit précis
+                await fetch(`${dbURL}/investissements/${session.firebaseId}/${prodKey}.json`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ dernierCollecte: new Date().toISOString() })
+                });
+
+                alert(`✅ Récolte réussie ! +${gain.toLocaleString()} CDF ajoutés à votre solde.`);
+                loadMyProducts(); // Recharger l'affichage
+            } catch(e) {
+                alert("❌ Erreur lors de la récolte.");
+            }
+        }
+
+        window.onload = loadMyProducts;
+    </script>
+</body>
+</html>
