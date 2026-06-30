@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHARGE POINT | Mon Compte</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #ffffff; font-family: 'Poppins', sans-serif; margin: 0; padding-bottom: 100px; }
+        
+        .profile-header {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('IMG_6519.jpeg');
+            background-size: cover; background-position: center;
+            height: 240px; color: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            border-bottom-left-radius: 3rem; border-bottom-right-radius: 3rem;
+        }
+
+        .avatar-circle {
+            width: 85px; height: 85px; background: rgba(249, 115, 22, 0.2);
+            backdrop-filter: blur(15px); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 3px solid #f97316; margin-bottom: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .balance-card {
+            background: white; border-radius: 30px; margin: -50px 20px 20px 20px;
+            padding: 30px; text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05); position: relative; z-index: 10;
+        }
+
+        .icon-menu {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            margin-top: 25px; padding-top: 25px; border-top: 1px solid #f8f8f8;
+        }
+        .icon-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+        .icon-item i { font-size: 26px; color: #f97316; transition: scale 0.2s; }
+        .icon-item:active i { scale: 0.9; }
+        .icon-item span { font-size: 9px; color: #6b7280; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .product-card {
+            background: #ffffff; border: 1px solid #f1f1f1; border-radius: 22px;
+            padding: 18px; margin-bottom: 12px; display: flex;
+            justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; display: flex; justify-content: space-around;
+            padding: 15px 0; border-top: 1px solid #eee; z-index: 1000;
+        }
+        .nav-link { text-align: center; color: #9ca3af; font-size: 11px; text-decoration: none; font-weight: bold; }
+        .nav-link.active { color: #f97316; }
+        
+        input:disabled, select:disabled { background-color: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <!-- Section Profil -->
+    <div class="profile-header">
+        <div class="avatar-circle">
+            <i class="fas fa-user-tie text-4xl text-white"></i>
+        </div>
+        <h2 class="font-black text-2xl uppercase tracking-tight" id="userName">Chargement...</h2>
+        <p class="text-[11px] font-bold opacity-90 tracking-[0.2em]" id="userPhone">ID: +243 -- --- ----</p>
+    </div>
+
+    <!-- Carte Solde & Raccourcis -->
+    <div class="balance-card">
+        <p class="text-gray-400 text-[10px] uppercase font-black tracking-[0.2em] mb-2">Solde Disponible</p>
+        <h1 id="displaySolde" class="text-4xl font-black text-gray-900">0 CDF</h1>
+        
+        <div class="icon-menu">
+            <div class="icon-item" onclick="window.location.href='recharge.html'">
+                <i class="fa-solid fa-sack-dollar"></i>
+                <span>Recharger</span>
+            </div>
+            <div class="icon-item" onclick="window.location.href='retrait.html'">
+                <i class="fa-solid fa-cash-register"></i>
+                <span>Retirer</span>
+            </div>
+            <div class="icon-item" onclick="window.location.href='historique.html'">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span>Historique</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liaison du compte de retrait -->
+    <div class="px-6 mb-6">
+        <div class="bg-white border border-gray-100 rounded-[2rem] p-5 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-[11px] font-black uppercase text-gray-400 tracking-widest flex items-center gap-2">
+                    <i class="fa-solid fa-credit-card text-orange-500"></i> Informations de Retrait
+                </h3>
+                <span id="statutLiaison" class="text-[8px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider hidden"></span>
+            </div>
+            
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="text-[9px] font-black uppercase text-gray-400 block mb-1">Nom complet (Enregistré sur la SIM)</label>
+                    <input type="text" id="retraitNom" placeholder="Ex: Jean Mukendi" class="w-full bg-gray-50 text-xs font-bold px-4 py-3 rounded-xl border border-gray-100 focus:outline-none focus:border-orange-500">
+                </div>
+                
+                <div>
+                    <label class="text-[9px] font-black uppercase text-gray-400 block mb-1">Numéro de téléphone de retrait</label>
+                    <input type="tel" id="retraitPhone" placeholder="Ex: 082XXXXXXX" class="w-full bg-gray-50 text-xs font-bold px-4 py-3 rounded-xl border border-gray-100 focus:outline-none focus:border-orange-500">
+                </div>
+
+                <div>
+                    <label class="text-[9px] font-black uppercase text-gray-400 block mb-1">Réseau Mobile</label>
+                    <select id="retraitReseau" class="w-full bg-gray-50 text-xs font-bold px-4 py-3 rounded-xl border border-gray-100 focus:outline-none focus:border-orange-500">
+                        <option value="">-- Choisir un réseau --</option>
+                        <option value="M-Pesa">M-Pesa (Vodacom)</option>
+                        <option value="Airtel Money">Airtel Money</option>
+                        <option value="Orange Money">Orange Money</option>
+                    </select>
+                </div>
+
+                <button id="btnSaveRetrait" onclick="saveRetraitInfos()" class="w-full bg-gray-900 text-white text-[10px] font-black uppercase tracking-wider py-3 rounded-xl shadow-md active:scale-95 transition-all mt-2">
+                    Lier définitivement mon compte
+                </button>
+                <p id="infoVerrouillage" class="text-[8px] font-bold text-center text-red-400 uppercase tracking-wider mt-1 hidden">⚠️ Ces informations sont liées à vie et ne peuvent plus être modifiées.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Centre de Support & Outils -->
+    <div class="px-6 space-y-4">
+        <!-- Service Client officiel Telegram -->
+        <a href="https://t.me/blax_sev" target="_blank" class="flex items-center justify-between bg-[#0088cc] text-white p-4 rounded-2xl shadow-md active:scale-[0.98] transition-all">
+            <div class="flex items-center gap-3">
+                <i class="fab fa-telegram-plane text-2xl"></i>
+                <div>
+                    <p class="text-xs font-black uppercase tracking-tight">Service Client</p>
+                    <p class="text-[9px] font-bold opacity-80">Une question ? Contactez notre support 24h/7j</p>
+                </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-xs opacity-70"></i>
+        </a>
+
+        <!-- Raccourci vers l'espace de récolte des machines -->
+        <div onclick="window.location.href='mes_produits.html'" class="flex items-center justify-between bg-orange-500 text-white p-4 rounded-2xl shadow-md cursor-pointer active:scale-[0.98] transition-all">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-gas-pump text-2xl"></i>
+                <div>
+                    <p class="text-xs font-black uppercase tracking-tight">Espace Récolte</p>
+                    <p class="text-[9px] font-bold opacity-90">Cliquez ici pour récupérer vos revenus quotidiens</p>
+                </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-xs opacity-70"></i>
+        </div>
+    </div>
+
+    <!-- Liste descriptive des équipements en cours -->
+    <div class="px-6 mt-8">
+        <div class="flex justify-between items-center mb-5">
+            <h3 class="text-[11px] font-black uppercase text-gray-400 tracking-widest flex items-center gap-2">
+                <i class="fa-solid fa-circle-nodes text-orange-500"></i> Mes installations (22j)
+            </h3>
+            <span class="bg-orange-50 text-orange-600 text-[9px] font-black px-3 py-1 rounded-full uppercase italic">Actif</span>
+        </div>
+        
+        <div id="listeMesProduits" class="space-y-3">
+            <div class="text-center py-10 opacity-20">
+                <i class="fa-solid fa-circle-notch fa-spin text-3xl text-orange-500"></i>
+            </div>
+        </div>
+
+        <!-- Bouton déconnexion standardisé -->
+        <button onclick="logout()" class="w-full mt-8 py-4 border-2 border-red-100 text-red-500 text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-red-50 active:scale-95 transition-all">
+            Déconnexion
+        </button>
+    </div>
+
+    <!-- Barre de navigation inférieure -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-link"><i class="fa-solid fa-house text-2xl mb-1"></i><br>Accueil</a>
+        <a href="produit.html" class="nav-link"><i class="fa-solid fa-gas-pump text-2xl mb-1"></i><br>Produit</a>
+        <a href="equipe.html" class="nav-link"><i class="fa-solid fa-users text-2xl mb-1"></i><br>Équipe</a>
+        <a href="compte.html" class="nav-link active"><i class="fa-solid fa-user text-2xl mb-1"></i><br>Compte</a>
+    </nav>
+
+    <script>
+        const session = JSON.parse(localStorage.getItem('sonny_session'));
+        const dbURL = "https://sonyy-9b565-default-rtdb.firebaseio.com";
+        let isAccountLinked = false;
+
+        if(!session) { window.location.href = "index.html"; }
+
+        async function initProfile() {
+            try {
+                // 1. Infos de base utilisateur
+                document.getElementById('userName').innerText = "Partenaire Charge Point";
+                document.getElementById('userPhone').innerText = "ID: " + session.telephone;
+
+                // 2. Synchronisation et affichage du solde réel + chargement infos retrait
+                const uRes = await fetch(`${dbURL}/utilisateurs/${session.firebaseId}.json`);
+                const user = await uRes.json();
+                document.getElementById('displaySolde').innerText = user.solde.toLocaleString() + " CDF";
+
+                // Gestion de la liaison définitive unique
+                if(user.retraitNom && user.retraitPhone && user.retraitReseau) {
+                    isAccountLinked = true;
+                    document.getElementById('retraitNom').value = user.retraitNom;
+                    document.getElementById('retraitPhone').value = user.retraitPhone;
+                    document.getElementById('retraitReseau').value = user.retraitReseau;
+                    
+                    // Verrouillage des inputs
+                    document.getElementById('retraitNom').disabled = true;
+                    document.getElementById('retraitPhone').disabled = true;
+                    document.getElementById('retraitReseau').disabled = true;
+                    
+                    // Ajustements visuels de verrouillage
+                    document.getElementById('btnSaveRetrait').style.display = "none";
+                    document.getElementById('infoVerrouillage').classList.remove('hidden');
+                    
+                    const badge = document.getElementById('statutLiaison');
+                    badge.innerText = "Lié";
+                    badge.className = "text-[8px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider bg-green-50 text-green-600";
+                    badge.classList.remove('hidden');
+                } else {
+                    const badge = document.getElementById('statutLiaison');
+                    badge.innerText = "Non lié";
+                    badge.className = "text-[8px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider bg-amber-50 text-amber-600";
+                    badge.classList.remove('hidden');
+                }
+
+                // 3. Affichage des investissements réels
+                const iRes = await fetch(`${dbURL}/investissements/${session.firebaseId}.json`);
+                const products = await iRes.json();
+
+                const container = document.getElementById('listeMesProduits');
+                container.innerHTML = "";
+
+                if (!products || Object.keys(products).length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-12 opacity-40 border-2 border-dashed border-gray-100 rounded-[2.5rem] bg-gray-50/50">
+                            <i class="fa-solid fa-box-open text-5xl mb-3 text-gray-300"></i>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Aucune pompe installée</p>
+                            <a href="produit.html" class="text-orange-500 text-[9px] font-black underline mt-2 block">VISITER LA BOUTIQUE</a>
+                        </div>`;
+                } else {
+                    for (let key in products) {
+                        const p = products[key];
+                        container.innerHTML += `
+                            <div class="product-card">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-500 shadow-sm">
+                                        <i class="fa-solid fa-gas-pump text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-black text-xs uppercase text-gray-800 tracking-tighter">${p.nom}</p>
+                                        <p class="text-[9px] text-green-600 font-bold italic">+${p.gainJournalier.toLocaleString()} CDF / 24H</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[8px] font-black text-gray-400 uppercase mb-1">Statut</p>
+                                    <span class="text-[9px] font-black text-orange-500 bg-orange-50 px-2 py-1 rounded-md uppercase">En Ligne</span>
+                                </div>
+                            </div>`;
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Sauvegarde des informations de retrait (Verrouillage à vie)
+        async function saveRetraitInfos() {
+            if(isAccountLinked) {
+                alert("⛔ Vos informations de retrait sont verrouillées de manière définitive.");
+                return;
+            }
+
+            const nom = document.getElementById('retraitNom').value.trim();
+            const phone = document.getElementById('retraitPhone').value.trim();
+            const reseau = document.getElementById('retraitReseau').value;
+
+            if(!nom || !phone || !reseau) {
+                alert("⚠️ Veuillez remplir tous les champs avant de sauvegarder.");
+                return;
+            }
+
+            const confirmation = confirm("⚠️ ATTENTION : Êtes-vous sûr de vos informations ? Une fois votre compte lié, vous ne pourrez plus JAMAIS changer ces coordonnées de retrait.");
+            if(!confirmation) return;
+
+            try {
+                // Double vérification instantanée de sécurité sur la db avant envoi
+                const checkRes = await fetch(`${dbURL}/utilisateurs/${session.firebaseId}.json`);
+                const checkUser = await checkRes.json();
+                
+                if(checkUser.retraitPhone) {
+                    alert("⛔ Ce compte possède déjà des informations de retrait enregistrées.");
+                    window.location.reload();
+                    return;
+                }
+
+                const response = await fetch(`${dbURL}/utilisateurs/${session.firebaseId}.json`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        retraitNom: nom,
+                        retraitPhone: phone,
+                        retraitReseau: reseau
+                    })
+                });
+
+                if(response.ok) {
+                    alert("✅ Votre compte de retrait a été lié avec succès et est définitivement verrouillé !");
+                    window.location.reload();
+                } else {
+                    alert("❌ Une erreur est survenue lors de l'enregistrement.");
+                }
+            } catch(e) {
+                console.error(e);
+                alert("❌ Erreur de connexion avec le serveur.");
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+
+        window.onload = initProfile;
+    </script>
+</body>
+</html>
