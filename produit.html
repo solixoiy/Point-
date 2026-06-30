@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHARGE POINT | VIP Investissement</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Poppins', sans-serif; padding-bottom: 120px; }
+        .vip-card { background: white; border-radius: 20px; overflow: hidden; margin-bottom: 20px; border: 1px solid #eee; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .vip-img { width: 100%; height: 210px; object-fit: cover; }
+        .btn-buy { background: #f97316; color: white; width: 100%; padding: 15px; border-radius: 15px; font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; }
+        .btn-buy:active { scale: 0.95; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #eee; z-index: 1000; }
+    </style>
+</head>
+<body class="p-4">
+
+    <!-- En-tête avec Compteur Dynamique -->
+    <div class="mb-6 pt-4 flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-black tracking-tight uppercase">CHARGE <span class="text-orange-500">POINT</span></h1>
+            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-1">Cycle de revenus : 22 Jours</p>
+        </div>
+        <!-- Compteur de produits possédés -->
+        <div class="bg-orange-100 border border-orange-200 rounded-2xl p-3 text-center min-w-[100px]">
+            <span id="product-count" class="block text-2xl font-black text-orange-500">...</span>
+            <span class="text-[9px] uppercase font-bold text-gray-500">Mes Machines</span>
+        </div>
+    </div>
+
+    <!-- Bouton d'accès rapide vers mes investissements -->
+    <div class="mb-6">
+        <button onclick="window.location.href='mes_produits.html'" class="w-full bg-gray-900 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
+            <i class="fa-solid fa-gas-pump text-orange-500"></i> Voir mes pompes & Récolter
+        </button>
+    </div>
+
+    <!-- Conteneur des cartes VIP -->
+    <div id="vip-container"></div>
+
+    <!-- Barre de navigation inférieure -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="flex flex-col items-center text-gray-400">
+            <i class="fa-solid fa-house text-xl"></i><span class="text-[10px] font-bold mt-1">Accueil</span>
+        </a>
+        <a href="produit.html" class="flex flex-col items-center text-orange-500">
+            <i class="fa-solid fa-gas-pump text-xl"></i><span class="text-[10px] font-bold mt-1">Produit</span>
+        </a>
+        <a href="compte.html" class="flex flex-col items-center text-gray-400">
+            <i class="fa-solid fa-user text-xl"></i><span class="text-[10px] font-bold mt-1">Compte</span>
+        </a>
+    </nav>
+
+    <script>
+        // Attribution séquentielle des 12 images fournies
+        const vipData = [
+            { id: 1, img: "IMG_6521.jpeg", price: 18000, daily: 3700 },
+            { id: 2, img: "IMG_6522.jpeg", price: 35000, daily: 7500 },
+            { id: 3, img: "IMG_6523.jpeg", price: 50000, daily: 11200 },
+            { id: 4, img: "IMG_6524.jpeg", price: 75000, daily: 15800 },
+            { id: 5, img: "IMG_6525.jpeg", price: 100000, daily: 25000 },
+            { id: 6, img: "IMG_6526.jpeg", price: 150000, daily: 38000 },
+            { id: 7, img: "IMG_6529.jpeg", price: 300000, daily: 80000 },
+            { id: 8, img: "IMG_6530.jpeg", price: 500000, daily: 110000 },
+            { id: 9, img: "IMG_6531.jpeg", price: 800000, daily: 280000 },
+            { id: 10, img: "IMG_6532.jpeg", price: 1000000, daily: 320000 },
+            { id: 11, img: "IMG_6521.jpeg", price: 2000000, daily: 700000 },
+            { id: 12, img: "IMG_6522.jpeg", price: 3000000, daily: 950000 }
+        ];
+
+        const container = document.getElementById('vip-container');
+        const session = JSON.parse(localStorage.getItem('sonny_session'));
+        const dbURL = "https://sonyy-9b565-default-rtdb.firebaseio.com";
+
+        if(!session) { window.location.href = "index.html"; }
+
+        // Génération de la boutique de pompes à essence
+        vipData.forEach(vip => {
+            const totalProfit = vip.daily * 22;
+            container.innerHTML += `
+                <div class="vip-card">
+                    <img src="${vip.img}" class="vip-img">
+                    <div class="p-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="font-black text-xl uppercase tracking-tighter">POMPE VIP ${vip.id}</h2>
+                            <span class="font-black text-xl text-orange-500">${vip.price.toLocaleString()} CDF</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mb-6 bg-orange-50/50 p-4 rounded-2xl border border-orange-100">
+                            <div><p class="text-[9px] font-black text-gray-400 uppercase">Gain / 24H</p><p class="font-black text-green-600 text-sm">${vip.daily.toLocaleString()} CDF</p></div>
+                            <div><p class="text-[9px] font-black text-gray-400 uppercase">Gain Total (22j)</p><p class="font-black text-gray-800 text-sm">${totalProfit.toLocaleString()} CDF</p></div>
+                        </div>
+                        <button onclick="acheterProduit(${vip.id}, ${vip.price}, ${vip.daily}, '${vip.img}')" class="btn-buy">Acheter & Installer</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        // Charger et compter les produits achetés
+        async function loadProductCount() {
+            try {
+                const res = await fetch(`${dbURL}/investissements/${session.firebaseId}.json`);
+                const data = await res.json();
+                if (data) {
+                    const count = Object.keys(data).length;
+                    document.getElementById('product-count').innerText = count;
+                } else {
+                    document.getElementById('product-count').innerText = "0";
+                }
+            } catch (e) {
+                document.getElementById('product-count').innerText = "0";
+            }
+        }
+
+        // Système d'achat sécurisé
+        async function acheterProduit(id, prix, gain, imageSrc) {
+            const response = await fetch(`${dbURL}/utilisateurs/${session.firebaseId}.json`);
+            const user = await response.json();
+
+            if (user.solde >= prix) {
+                const nouveauSolde = user.solde - prix;
+                
+                const achat = {
+                    vipId: id,
+                    nom: "Pompe VIP " + id,
+                    img: imageSrc,
+                    gainJournalier: gain,
+                    dateAchat: new Date().toISOString(),
+                    expireLe: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000).toISOString(),
+                    dernierCollecte: new Date().toISOString()
+                };
+
+                // Déduire le solde
+                await fetch(`${dbURL}/utilisateurs/${session.firebaseId}.json`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ 
+                        solde: nouveauSolde,
+                        droitRetrait: true 
+                    })
+                });
+
+                // Ajouter l'investissement
+                await fetch(`${dbURL}/investissements/${session.firebaseId}.json`, {
+                    method: 'POST',
+                    body: JSON.stringify(achat)
+                });
+
+                alert(`🎉 Succès ! Votre pompe VIP ${id} est installée et commence à produire.`);
+                window.location.href = "mes_produits.html";
+            } else {
+                alert("❌ Solde insuffisant ! Veuillez recharger votre compte.");
+            }
+        }
+
+        window.onload = loadProductCount;
+    </script>
+</body>
+</html>
