@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHARGE POINT | Historique</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { background: #ffffff; font-family: 'Poppins', sans-serif; }
+        
+        .profile-header {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('IMG_6519.jpeg');
+            background-size: cover; background-position: center;
+            height: 180px; color: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            border-bottom-left-radius: 3rem; border-bottom-right-radius: 3rem;
+        }
+
+        .tab-btn { flex: 1; padding: 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; border-radius: 1.2rem; color: #94a3b8; border: 2px solid transparent; }
+        .tab-active { background: #f97316; color: white; box-shadow: 0 10px 20px rgba(249, 115, 22, 0.2); }
+        .trans-card { background: white; border-radius: 1.8rem; padding: 20px; border: 1px solid #f1f5f9; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .status-badge { font-size: 8px; font-weight: 900; padding: 5px 12px; border-radius: 50px; text-transform: uppercase; }
+        
+        .badge-attente, .badge-enattente { background: #ffedd5; color: #ea580c; } 
+        .badge-approuvé, .badge-approuve { background: #dcfce7; color: #166534; } 
+        .badge-rejeté, .badge-rejete { background: #fee2e2; color: #991b1b; }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; display: flex; justify-content: space-around;
+            padding: 15px 0; border-top: 1px solid #eee; z-index: 1000;
+        }
+        .nav-link { text-align: center; color: #9ca3af; font-size: 11px; text-decoration: none; font-weight: bold; }
+        .nav-link.active { color: #f97316; }
+    </style>
+</head>
+<body class="pb-28">
+
+    <div class="profile-header text-center mb-8 shadow-md">
+        <h1 class="text-2xl font-black uppercase tracking-tight">Historique</h1>
+        <p class="text-[9px] font-bold opacity-90 uppercase tracking-[0.3em] mt-1 text-orange-400">Suivi des transactions</p>
+    </div>
+
+    <div class="px-6">
+        <div class="bg-gray-100 p-2 rounded-[1.5rem] flex mb-8 border border-gray-50">
+            <button id="btnRecharge" onclick="switchTab('recharge')" class="tab-btn tab-active">Dépôts</button>
+            <button id="btnRetrait" onclick="switchTab('retrait')" class="tab-btn">Retraits</button>
+        </div>
+
+        <div id="transactionList" class="min-h-[400px]">
+            <div class="text-center py-20 opacity-30">
+                <i class="fa-solid fa-circle-notch fa-spin text-3xl text-orange-500"></i>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-link"><i class="fa-solid fa-house text-2xl mb-1"></i><br>Accueil</a>
+        <a href="produit.html" class="nav-link"><i class="fa-solid fa-gas-pump text-2xl mb-1"></i><br>Produit</a>
+        <a href="equipe.html" class="nav-link"><i class="fa-solid fa-users text-2xl mb-1"></i><br>Équipe</a>
+        <a href="compte.html" class="nav-link active"><i class="fa-solid fa-user text-2xl mb-1"></i><br>Compte</a>
+    </nav>
+
+    <script>
+        const session = JSON.parse(localStorage.getItem('sonny_session'));
+        const dbURL = "https://sonyy-9b565-default-rtdb.firebaseio.com";
+
+        if(!session) window.location.href = "index.html";
+
+        async function switchTab(type) {
+            // Gestion visuelle active/inactive des boutons
+            document.getElementById('btnRecharge').className = (type === 'recharge' ? 'tab-btn tab-active' : 'tab-btn');
+            document.getElementById('btnRetrait').className = (type === 'retrait' ? 'tab-btn tab-active' : 'tab-btn');
+            
+            const listContainer = document.getElementById('transactionList');
+            listContainer.innerHTML = '<div class="text-center py-20 opacity-30"><i class="fa-solid fa-circle-notch fa-spin text-3xl text-orange-500"></i></div>';
+
+            try {
+                const endpoint = type === 'recharge' ? 'recharges' : 'retraits';
+                const res = await fetch(`${dbURL}/${endpoint}.json`);
+                const allData = await res.json();
+                
+                listContainer.innerHTML = ""; 
+
+                let userTransactions = [];
+
+                if(allData) {
+                    for(let id in allData) {
+                        if(allData[id].userId === session.firebaseId) {
+                            userTransactions.push(allData[id]);
+                        }
+                    }
+                }
+
+                if(userTransactions.length === 0) {
+                    listContainer.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-24 opacity-30">
+                            <i class="fa-solid fa-box-open text-5xl mb-4 text-gray-300"></i>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Aucune transaction</p>
+                        </div>`;
+                    return;
+                }
+
+                // Affichage trié (Plus récent au plus ancien)
+                userTransactions.reverse().forEach(item => {
+                    const statusText = item.status || "EN ATTENTE";
+                    // Nettoyage de la chaîne pour matcher les classes CSS (ex: "en attente" -> "enattente")
+                    const cleanStatus = statusText.toLowerCase().replace(/\s+/g, '');
+                    const statusClass = "badge-" + cleanStatus;
+                    
+                    const dateAffichage = new Date(item.date).toLocaleDateString('fr-FR', {
+                        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                    });
+
+                    listContainer.innerHTML += `
+                        <div class="trans-card">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <p class="text-[10px] font-black uppercase text-gray-400 mb-1 tracking-tight">${dateAffichage}</p>
+                                    <p class="text-xl font-black text-gray-900 tracking-tighter">${parseFloat(item.montant).toLocaleString()} <span class="text-[10px] text-gray-400 font-bold">CDF</span></p>
+                                </div>
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-2xl flex items-center justify-between border border-gray-100">
+                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Via : ${type === 'recharge' ? (item.reseau || 'Mobile Money') : (item.retraitReseau || 'Mobile Money')}</p>
+                                <p class="text-[10px] font-black text-orange-500 font-mono italic">${type === 'recharge' ? 'ID: VERIF' : (item.retraitPhone || 'Compte lié')}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+            } catch (e) {
+                console.error(e);
+                listContainer.innerHTML = `<p class="text-center text-red-400 text-[10px] font-bold">Erreur de chargement. Vérifiez votre connexion.</p>`;
+            }
+        }
+
+        window.onload = () => switchTab('recharge');
+    </script>
+</body>
+</html>
