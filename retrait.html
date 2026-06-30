@@ -36,11 +36,12 @@
     <!-- Section En-tête -->
     <div class="profile-header text-center mb-8 shadow-md">
         <h1 class="text-2xl font-black uppercase tracking-tight">Retrait CDF</h1>
-        <p class="text-[9px] font-bold opacity-90 uppercase tracking-[0.3em] mt-1 text-orange-400">Heures de traitement: 09h00 — 17h00</p>
+        <p class="text-[9px] font-bold opacity-90 uppercase tracking-[0.2em] mt-1 text-orange-400">Lundi au Dimanche: 09h00 — 17h00</p>
+        <p class="text-[8px] font-bold text-white uppercase tracking-widest mt-0.5">Arrivée : 3h à 24h maximum</p>
     </div>
 
     <div class="px-6 space-y-6">
-        <!-- Section Compte de Réception (Automatique ou à lier) -->
+        <!-- Section Compte de Réception -->
         <div class="card p-6">
             <h3 class="text-[10px] font-black uppercase text-gray-400 mb-4 tracking-widest flex items-center gap-2">
                 <i class="fa-solid fa-credit-card text-orange-500"></i> Destination des fonds
@@ -59,7 +60,7 @@
                 </button>
             </div>
 
-            <!-- État 2: Le compte est déjà configuré (Affichage direct) -->
+            <!-- État 2: Le compte est déjà configuré -->
             <div id="affichageCompte" class="hidden">
                 <div class="bg-orange-50/60 p-5 rounded-2xl border border-dashed border-orange-200">
                     <div class="flex items-center justify-between mb-2">
@@ -78,9 +79,15 @@
                 <i class="fa-solid fa-money-bill-wave text-orange-500"></i> Montant du retrait
             </h3>
             
-            <div class="flex items-center gap-2 border-b-2 border-gray-100 mb-6 pb-2">
-                <input type="number" id="montantInput" placeholder="5200" class="w-full text-4xl font-black outline-none bg-transparent text-gray-900 tracking-tighter" disabled>
+            <div class="flex items-center gap-2 border-b-2 border-gray-100 mb-2 pb-2">
+                <input type="number" id="montantInput" oninput="calculerFrais()" placeholder="5200" class="w-full text-4xl font-black outline-none bg-transparent text-gray-900 tracking-tighter" disabled>
                 <span class="text-xl font-black text-gray-300 italic">CDF</span>
+            </div>
+
+            <!-- Affichage dynamique du calcul des frais -->
+            <div class="flex justify-between items-center mb-6 px-1">
+                <p class="text-[9px] font-bold text-gray-400 uppercase">Montant Net à recevoir :</p>
+                <p id="netARecevoir" class="text-xs font-black text-orange-500">0 CDF</p>
             </div>
 
             <div class="grid grid-cols-2 gap-4 mb-6">
@@ -90,7 +97,7 @@
                 </div>
                 <div class="bg-gray-50 p-3 rounded-xl">
                     <p class="text-[8px] font-black text-gray-400 uppercase">Frais de Réseau</p>
-                    <p class="text-xs font-black text-green-600">0 CDF (Gratuit)</p>
+                    <p id="labelFrais" class="text-xs font-black text-red-500">16 %</p>
                 </div>
             </div>
 
@@ -115,16 +122,29 @@
 
         if(!session) window.location.href = "index.html";
 
-        // --- CHARGEMENT INITIAL ET ANALYSE DU PROFIL ---
+        // --- CALCUL DYNAMIQUE DES FRAIS DE 16% ---
+        window.calculerFrais = function() {
+            const montant = parseFloat(document.getElementById('montantInput').value);
+            const netContainer = document.getElementById('netARecevoir');
+            
+            if (!montant || isNaN(montant) || montant <= 0) {
+                netContainer.innerText = "0 CDF";
+                return;
+            }
+
+            const frais = montant * 0.16;
+            const net = montant - frais;
+            netContainer.innerText = Math.max(0, net).toLocaleString() + " CDF";
+        }
+
+        // --- CHARGEMENT INITIAL ---
         async function loadProfileRetrait() {
             try {
                 const res = await fetch(`${dbURL}/utilisateurs/${session.firebaseId}.json`);
                 const user = await res.json();
                 localUserBackup = user;
 
-                // Vérification stricte des variables de liaison de compte existantes
-                if(user.retraitNom && user.retraitPhone && user.retraitReseau) {
-                    // Cacher l'erreur et afficher la carte sécurisée
+                if(user && user.retraitNom && user.retraitPhone && user.retraitReseau) {
                     document.getElementById('formLiaison').classList.add('hidden');
                     document.getElementById('affichageCompte').classList.remove('hidden');
                     
@@ -132,7 +152,6 @@
                     document.getElementById('labelNum').innerText = user.retraitPhone;
                     document.getElementById('labelReseau').innerText = user.retraitReseau;
                     
-                    // Débloquer le champ de montant et le bouton d'action principal
                     document.getElementById('montantInput').disabled = false;
                     
                     const btn = document.getElementById('btnRetrait');
@@ -142,19 +161,18 @@
             } catch(e) { console.error(e); }
         }
 
-        // --- ENVOI DE LA DEMANDE DIRECTEMENT AU CONSOLE DE L'ADMINISTRATEUR ---
+        // --- TRAITEMENT ET ENVOI DE LA DEMANDE ---
         async function soumettreRetraitFirebase() {
             const montant = parseFloat(document.getElementById('montantInput').value);
             const heure = new Date().getHours();
             const btn = document.getElementById('btnRetrait');
 
-            // 1. Contrôle des horaires d'ouverture de l'API de paiement (9h-17h)
+            // Contrôle des horaires : Tous les jours (Lundi-Dimanche) de 09h00 à 17h00
             if(heure < 9 || heure >= 17) {
-                alert("🕒 Les demandes de retraits sont traitées uniquement de 09h00 à 17h00.");
+                alert("🕒 Les demandes de retraits sont ouvertes tous les jours de 09h00 à 17h00.");
                 return;
             }
 
-            // 2. Validation de la conformité du seuil minimum
             if(montant < 5200 || isNaN(montant)) {
                 alert("⚠️ Le montant minimum requis pour effectuer un retrait est de 5.200 CDF.");
                 return;
@@ -165,10 +183,10 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Analyse du solde...';
 
             try {
-                // Synchronisation instantanée du solde pour éviter la fraude au double-clic
                 const res = await fetch(`${dbURL}/utilisateurs/${session.firebaseId}.json`);
                 const user = await res.json();
 
+                // On vérifie par rapport au montant brut demandé (frais inclus)
                 if(montant > user.solde) {
                     alert("❌ Solde insuffisant ! Votre solde disponible est de : " + user.solde.toLocaleString() + " CDF");
                     btn.disabled = false;
@@ -177,18 +195,20 @@
                     return;
                 }
 
-                // Déduction instantanée du solde de l'utilisateur sur la base de données
+                // Déduction immédiate du solde global de l'utilisateur
                 const nouveauSolde = user.solde - montant;
                 await fetch(`${dbURL}/utilisateurs/${session.firebaseId}.json`, {
                     method: 'PATCH',
                     body: JSON.stringify({ solde: nouveauSolde })
                 });
 
-                // Structuration de la facture transmise dans le dossier global /retraits/ de l'administrateur
+                // Enregistrement de la facture pour l'administration (avec mention des frais déduits)
                 const demande = {
                     userId: session.firebaseId,
                     telephoneCompte: session.telephone,
                     montant: montant,
+                    fraisAppliques: montant * 0.16,
+                    montantNet: montant - (montant * 0.16),
                     receveurNom: user.retraitNom,
                     receveurNum: user.retraitPhone,
                     retraitReseau: user.retraitReseau,
@@ -201,7 +221,7 @@
                     body: JSON.stringify(demande)
                 });
 
-                alert("✅ Votre demande de retrait a été envoyée avec succès à la direction. Les fonds arriveront sur votre compte lié après validation.");
+                alert("✅ Votre demande de retrait a été envoyée avec succès. Le délai d'arrivée sur votre compte mobile money est compris entre 3 et 24 heures maximum.");
                 window.location.href = "compte.html";
 
             } catch(e) { 
