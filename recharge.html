@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHARGE POINT | Retraits</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #ffffff; font-family: 'Poppins', sans-serif; margin: 0; padding-bottom: 50px; }
+        
+        .profile-header {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('IMG_6519.jpeg');
+            background-size: cover; background-position: center;
+            height: 180px; color: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            border-bottom-left-radius: 3rem; border-bottom-right-radius: 3rem;
+        }
+
+        .card { background: white; border-radius: 2rem; border: 1px solid #f3f4f6; box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
+        .input-premium { background: #f9fafb; border-radius: 1rem; padding: 18px; width: 100%; outline: none; font-weight: bold; border: 1px solid #f3f4f6; transition: 0.25s; }
+        .input-premium:focus { border-color: #f97316; background: white; }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; display: flex; justify-content: space-around;
+            padding: 15px 0; border-top: 1px solid #eee; z-index: 1000;
+        }
+        .nav-link { text-align: center; color: #9ca3af; font-size: 11px; text-decoration: none; font-weight: bold; }
+        .nav-link.active { color: #f97316; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- Section En-tête -->
+    <div class="profile-header text-center mb-8 shadow-md">
+        <h1 class="text-2xl font-black uppercase tracking-tight">Retrait CDF</h1>
+        <p class="text-[9px] font-bold opacity-90 uppercase tracking-[0.3em] mt-1 text-orange-400">Heures de traitement: 09h00 — 17h00</p>
+    </div>
+
+    <div class="px-6 space-y-6">
+        <!-- Section Compte de Réception (Automatique ou à lier) -->
+        <div class="card p-6">
+            <h3 class="text-[10px] font-black uppercase text-gray-400 mb-4 tracking-widest flex items-center gap-2">
+                <i class="fa-solid fa-credit-card text-orange-500"></i> Destination des fonds
+            </h3>
+
+            <!-- État 1: Le compte n'est pas encore configuré -->
+            <div id="formLiaison" class="space-y-4">
+                <div class="bg-red-50 p-4 rounded-2xl border border-red-100 flex gap-3 items-start">
+                    <i class="fa-solid fa-triangle-exclamation text-red-500 mt-0.5"></i>
+                    <p class="text-[10px] text-red-900 font-bold leading-tight uppercase tracking-tight">
+                        Aucun compte de retrait détecté. Vous devez obligatoirement configurer vos coordonnées de paiement depuis votre espace compte avant de retirer.
+                    </p>
+                </div>
+                <button onclick="window.location.href='compte.html'" class="w-full bg-red-500 text-white py-4 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-md active:scale-95 transition-all">
+                    Aller lier mon compte maintenant
+                </button>
+            </div>
+
+            <!-- État 2: Le compte est déjà configuré (Affichage direct) -->
+            <div id="affichageCompte" class="hidden">
+                <div class="bg-orange-50/60 p-5 rounded-2xl border border-dashed border-orange-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <span id="labelReseau" class="text-[9px] font-black text-orange-600 bg-orange-100/50 px-2.5 py-1 rounded-md uppercase tracking-wider">CHARGEMENT...</span>
+                        <div class="flex items-center gap-1 text-green-600 text-[9px] font-black uppercase"><i class="fa-solid fa-circle-check"></i> Actif</div>
+                    </div>
+                    <p id="labelNom" class="font-black text-base uppercase text-gray-900 leading-tight">---</p>
+                    <p id="labelNum" class="text-xs font-black text-gray-500 font-mono mt-1 italic">000 000 000</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Formulaire de Demande -->
+        <div class="card p-6">
+            <h3 class="text-[10px] font-black uppercase text-gray-400 mb-4 tracking-widest flex items-center gap-2">
+                <i class="fa-solid fa-money-bill-wave text-orange-500"></i> Montant du retrait
+            </h3>
+            
+            <div class="flex items-center gap-2 border-b-2 border-gray-100 mb-6 pb-2">
+                <input type="number" id="montantInput" placeholder="5200" class="w-full text-4xl font-black outline-none bg-transparent text-gray-900 tracking-tighter" disabled>
+                <span class="text-xl font-black text-gray-300 italic">CDF</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-gray-50 p-3 rounded-xl">
+                    <p class="text-[8px] font-black text-gray-400 uppercase">Seuil Minimum</p>
+                    <p class="text-xs font-black text-gray-800">5.200 CDF</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-xl">
+                    <p class="text-[8px] font-black text-gray-400 uppercase">Frais de Réseau</p>
+                    <p class="text-xs font-black text-green-600">0 CDF (Gratuit)</p>
+                </div>
+            </div>
+
+            <button onclick="soumettreRetraitFirebase()" id="btnRetrait" class="w-full bg-gray-900 text-white py-4 rounded-2xl font-black uppercase text-[11px] tracking-wider shadow-md opacity-40 cursor-not-allowed" disabled>
+                Soumettre la demande
+            </button>
+        </div>
+    </div>
+
+    <!-- Barre de navigation inférieure -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-link"><i class="fa-solid fa-house text-2xl mb-1"></i><br>Accueil</a>
+        <a href="produit.html" class="nav-link"><i class="fa-solid fa-gas-pump text-2xl mb-1"></i><br>Produit</a>
+        <a href="equipe.html" class="nav-link"><i class="fa-solid fa-users text-2xl mb-1"></i><br>Équipe</a>
+        <a href="compte.html" class="nav-link active"><i class="fa-solid fa-user text-2xl mb-1"></i><br>Compte</a>
+    </nav>
+
+    <script>
+        const session = JSON.parse(localStorage.getItem('sonny_session'));
+        const dbURL = "https://sonyy-9b565-default-rtdb.firebaseio.com";
+        let localUserBackup = null;
+
+        if(!session) window.location.href = "index.html";
+
+        // --- CHARGEMENT INITIAL ET ANALYSE DU PROFIL ---
+        async function loadProfileRetrait() {
+            try {
+                const res = await fetch(`${dbURL}/utilisateurs/${session.firebaseId}.json`);
+                const user = await res.json();
+                localUserBackup = user;
+
+                // Vérification stricte des variables de liaison de compte existantes
+                if(user.retraitNom && user.retraitPhone && user.retraitReseau) {
+                    // Cacher l'erreur et afficher la carte sécurisée
+                    document.getElementById('formLiaison').classList.add('hidden');
+                    document.getElementById('affichageCompte').classList.remove('hidden');
+                    
+                    document.getElementById('labelNom').innerText = user.retraitNom;
+                    document.getElementById('labelNum').innerText = user.retraitPhone;
+                    document.getElementById('labelReseau').innerText = user.retraitReseau;
+                    
+                    // Débloquer le champ de montant et le bouton d'action principal
+                    document.getElementById('montantInput').disabled = false;
+                    
+                    const btn = document.getElementById('btnRetrait');
+                    btn.disabled = false;
+                    btn.className = "w-full bg-gray-900 text-white py-4 rounded-2xl font-black uppercase text-[11px] tracking-wider shadow-md active:scale-95 transition-all";
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // --- ENVOI DE LA DEMANDE DIRECTEMENT AU CONSOLE DE L'ADMINISTRATEUR ---
+        async function soumettreRetraitFirebase() {
+            const montant = parseFloat(document.getElementById('montantInput').value);
+            const heure = new Date().getHours();
+            const btn = document.getElementById('btnRetrait');
+
+            // 1. Contrôle des horaires d'ouverture de l'API de paiement (9h-17h)
+            if(heure < 9 || heure >= 17) {
+                alert("🕒 Les demandes de retraits sont traitées uniquement de 09h00 à 17h00.");
+                return;
+            }
+
+            // 2. Validation de la conformité du seuil minimum
+            if(montant < 5200 || isNaN(montant)) {
+                alert("⚠️ Le montant minimum requis pour effectuer un retrait est de 5.200 CDF.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.className = "w-full bg-gray-400 text-white py-4 rounded-2xl font-black uppercase text-[11px] tracking-wider text-center cursor-not-allowed";
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Analyse du solde...';
+
+            try {
+                // Synchronisation instantanée du solde pour éviter la fraude au double-clic
+                const res = await fetch(`${dbURL}/utilisateurs/${session.firebaseId}.json`);
+                const user = await res.json();
+
+                if(montant > user.solde) {
+                    alert("❌ Solde insuffisant ! Votre solde disponible est de : " + user.solde.toLocaleString() + " CDF");
+                    btn.disabled = false;
+                    btn.className = "w-full bg-gray-900 text-white py-4 rounded-2xl font-black uppercase text-[11px] tracking-wider shadow-md active:scale-95 transition-all";
+                    btn.innerHTML = "Soumettre la demande";
+                    return;
+                }
+
+                // Déduction instantanée du solde de l'utilisateur sur la base de données
+                const nouveauSolde = user.solde - montant;
+                await fetch(`${dbURL}/utilisateurs/${session.firebaseId}.json`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ solde: nouveauSolde })
+                });
+
+                // Structuration de la facture transmise dans le dossier global /retraits/ de l'administrateur
+                const demande = {
+                    userId: session.firebaseId,
+                    telephoneCompte: session.telephone,
+                    montant: montant,
+                    receveurNom: user.retraitNom,
+                    receveurNum: user.retraitPhone,
+                    retraitReseau: user.retraitReseau,
+                    date: new Date().toISOString(),
+                    status: "EN ATTENTE"
+                };
+
+                await fetch(`${dbURL}/retraits.json`, {
+                    method: 'POST',
+                    body: JSON.stringify(demande)
+                });
+
+                alert("✅ Votre demande de retrait a été envoyée avec succès à la direction. Les fonds arriveront sur votre compte lié après validation.");
+                window.location.href = "compte.html";
+
+            } catch(e) { 
+                alert("❌ Erreur de connexion avec le serveur."); 
+                btn.disabled = false; 
+                btn.className = "w-full bg-gray-900 text-white py-4 rounded-2xl font-black uppercase text-[11px] tracking-wider shadow-md active:scale-95 transition-all";
+                btn.innerHTML = "Soumettre la demande";
+            }
+        }
+
+        window.onload = loadProfileRetrait;
+    </script>
+</body>
+</html>
